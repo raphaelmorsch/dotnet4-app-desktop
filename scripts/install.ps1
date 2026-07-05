@@ -16,9 +16,13 @@ function Write-Step($Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
 
-function Get-RepoRoot {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-    return (Resolve-Path (Join-Path $scriptDir '..')).Path
+# $PSScriptRoot funciona no PowerShell 3+ (Server 2012 R2).
+# Nao usar $MyInvocation dentro de funcoes — retorna null nessa versao.
+if ($PSScriptRoot) {
+    $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+}
+else {
+    $repoRoot = (Resolve-Path (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '..')).Path
 }
 
 function Find-MsBuild {
@@ -126,7 +130,6 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'Git nao encontrado. Instale Git for Windows: https://git-scm.com/download/win'
 }
 
-$repoRoot = Get-RepoRoot
 Set-Location $repoRoot
 
 if (-not $SkipPull) {
